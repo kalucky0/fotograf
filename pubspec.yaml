@@ -1,7 +1,7 @@
 name: fotograf
 description: Library that provides a simple gallery and camera
 repository: https://github.com/kalucky0/injecta
-version: 0.1.0
+version: 0.1.0-dev.1
 
 environment:
   sdk: '>=3.1.5 <4.0.0'

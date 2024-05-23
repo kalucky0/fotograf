@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
@@ -38,12 +39,13 @@ class _CameraViewState extends State<CameraView> {
   Uint8List? preview;
   AssetEntity? galleryPreview;
 
+  List<CameraDescription> frontCameras = [];
+  List<CameraDescription> backCameras = [];
+
   @override
   void initState() {
     super.initState();
-    PhotoManager.getAssetListRange(start: 0, end: 1).then((value) {
-      if (value.isNotEmpty) setState(() => galleryPreview = value.first);
-    });
+    initializeGallery();
     initialize();
   }
 
@@ -59,7 +61,24 @@ class _CameraViewState extends State<CameraView> {
     initializeCamera().catchError((e) => widget.onError(e));
   }
 
+  Future<void> initializeGallery() async {
+    await PhotoManager.requestPermissionExtend(
+      requestOption: const PermissionRequestOption(),
+    );
+    final images = await PhotoManager.getAssetListRange(start: 0, end: 1);
+    if (images.isEmpty || !context.mounted) return;
+    setState(() => galleryPreview = images.first);
+  }
+
   Future initializeCamera() async {
+    if (cameras.isEmpty) return;
+    frontCameras = cameras
+        .where((c) => c.lensDirection == CameraLensDirection.front)
+        .toList();
+    backCameras = cameras
+        .where((c) => c.lensDirection == CameraLensDirection.back)
+        .toList();
+    controller = CameraController(cameras.first, ResolutionPreset.max);
     await controller?.initialize();
     if (mounted) setState(() {});
     await Future.delayed(const Duration(milliseconds: 50));
@@ -100,11 +119,12 @@ class _CameraViewState extends State<CameraView> {
   }
 
   void switchCamera() {
-    if (cameras.length < 2) return;
+    if (frontCameras.isEmpty || backCameras.isEmpty) return;
     isFrontCamera = !isFrontCamera;
-    controller?.setDescription(
-      isFrontCamera ? cameras.last : cameras.first,
-    );
+    final cameras = isFrontCamera ? frontCameras : backCameras;
+    // If anyone has a better idea, feel free to change this
+    final index = Random().nextInt(cameras.length);
+    controller?.setDescription(cameras[index]);
   }
 
   Future showFakeFlash() async {

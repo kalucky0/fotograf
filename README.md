@@ -12,7 +12,7 @@ To use Fotograf in your Flutter project, add the following dependency to your `p
 
 ```yaml
 dependencies:
-  fotograf: ^0.1.0
+  fotograf: ^0.2.0
 ```
 
 Then, run: 
